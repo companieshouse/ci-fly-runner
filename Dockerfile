@@ -1,20 +1,27 @@
 #
 # ci-fli-runner
 #
+# Set ${flyversion} on build with "--build-arg flyversion=...."
+#   e.g. --build-arg flyversion=4.2.1
 
-# Apline 3.1 image.
-# https://hub.docker.com/_/alpine
-FROM alpine:3.10
 
-# Update package list.
+# Build Stage
+FROM alpine:3.10 AS build
+
 RUN apk update
-
-# Add bash package and dependencies.
 RUN apk add bash=5.0.0-r0
-
-# Add curl package and dependencies.
 RUN apk add curl=7.65.1-r0
 
-# Download Concourse Fly 4.2.1 and set file permissions.
-RUN wget https://github.com/concourse/concourse/releases/download/v4.2.1/fly_linux_amd64 -O /usr/bin/fly \
+ARG flyversion
+RUN wget https://github.com/concourse/concourse/releases/download/v${flyversion}/fly_linux_amd64 -O /usr/bin/fly \
     && chmod +x /usr/bin/fly
+
+
+# Test Stage
+FROM build AS test
+ARG flyversion
+RUN fly --version | grep ${flyversion}
+
+
+# Final Stage
+FROM build
