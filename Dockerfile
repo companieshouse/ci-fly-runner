@@ -1,10 +1,3 @@
-#
-# ci-fli-runner
-#
-# Set ${flyversion} on build with "--build-arg flyversion=...."
-#   e.g. --build-arg flyversion=4.2.1
-
-
 # Build Stage
 FROM alpine:3.10 AS build
 
