@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
-echo Testing Fly version: $flyversion
-fly --version | grep ${flyversion}
+echo Testing Fly version: $fly_version
+fly --version | grep ${fly_version}
