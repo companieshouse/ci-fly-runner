@@ -1,8 +1,8 @@
 # ci-fly-runner
-A "Fly" Docker container for running against Concourse.
+A "Fly" Docker container for running against Concourse. Note that this is intended to be run from a Concourse pipeline.
 
 ## Dockerfile
-The Dockerfile requires one build argument: "flyversion". This can either be passed in using the command line argument "--build-arg flyversion=x.x.x" or can be passed via the Concourse pipeline "build_args".
+The Dockerfile requires one build argument: "flyversion". This can either be passed in using the command line argument below or can be passed via the Concourse pipeline "build_args".
 
 Command line example:
 ```bash
