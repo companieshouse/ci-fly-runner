@@ -2,11 +2,14 @@
 A "Fly" Docker container for running against Concourse. Note that this is intended to be run from a Concourse pipeline.
 
 ## Dockerfile
-The Dockerfile requires one build argument: "flyversion". This can either be passed in using the command line argument below or can be passed via the Concourse pipeline "build_args".
+The Dockerfile requires one build argument: "fly_version". This should be passed via the Concourse pipeline parameter "build_args_file" or "build_args" but for testing can also be passed in using a command line argument.
 
-Command line example:
-```bash
-docker build --build-arg flyversion=5.0.0 . -t ci-fli-runner:5.0.0
+Pipeline example using input file (the file will have been created in a previous pipeline step).
+```yaml
+- put: docker-registry
+  params:
+    build: git-fly-dockerfile
+    build_args_file: docker-build-args/flyversion.json
 ```
 
 Pipeline example using hard-coded build args:
@@ -18,16 +21,13 @@ Pipeline example using hard-coded build args:
       flyversion: 4.2.1
 ```
 
-Pipeline example using input file (the file will have been created in a previous step).
-```yaml
-- put: docker-registry
-  params:
-    build: git-fly-dockerfile
-    build_args_file: docker-build-args/flyversion.json
+Command line example:
+```bash
+docker build --build-arg fly_version=5.0.0 . -t ci-fli-runner:5.0.0
 ```
 
-## Docker-tags
-Use this file to define the tags that will be added to the container, and the version of Fly to be downloaded and installed in the container.
+## fly-version
+This file is read by the Concourse pipeline. Use this file to define the version of Fly to be downloaded and installed in the container and the tags that will be added to the container.
 If multiple tags are required (i.e. the Fly version and 'latest'), they should be separated by spaces.
 
 Examples:
