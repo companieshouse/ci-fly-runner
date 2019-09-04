@@ -1,7 +1,7 @@
 # Build Stage
 FROM alpine:3.10 AS build
 
-COPY fly-install.sh /tmp/fly-install.sh
+COPY scripts/fly-install.sh /tmp/fly-install.sh
 
 RUN apk update \
     && apk upgrade --no-cache
@@ -15,7 +15,7 @@ RUN /tmp/fly-install.sh
 # Test Stage
 FROM build AS test
 
-COPY fly-test.sh /tmp/fly-test.sh
+COPY scripts/fly-test.sh /tmp/fly-test.sh
 
 ARG flyversion
 RUN /tmp/fly-test.sh
