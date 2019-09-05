@@ -1,5 +1,5 @@
 # Build Stage
-FROM alpine:3.10 AS build
+FROM alpine:3.10
 
 COPY scripts/fly-install /tmp/fly-install
 
@@ -10,16 +10,3 @@ RUN apk add --no-cache curl=7.65.1-r0
 
 ARG fly_version
 RUN /tmp/fly-install
-
-
-# Test Stage
-FROM build AS test
-
-COPY scripts/fly-test /tmp/fly-test
-
-ARG fly_version
-RUN /tmp/fly-test
-
-
-# Final Stage
-FROM build
