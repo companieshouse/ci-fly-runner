@@ -1,11 +1,11 @@
 FROM alpine:3.10
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apk update \
     && apk upgrade --no-cache
 RUN apk add --no-cache bash=5.0.0-r0
 RUN apk add --no-cache curl=7.66.0-r0
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -L https://github.com/concourse/concourse/releases/download/v6.7.0/fly-6.7.0-linux-amd64.tgz \
     | tar -pzxv -C /usr/bin
 
