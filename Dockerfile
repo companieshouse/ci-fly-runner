@@ -14,4 +14,5 @@ RUN curl -L https://github.com/concourse/concourse/releases/download/v${CONCOURS
     | tar -pzxv -C /usr/bin && \
     rm -f /tmp/fly.tgz
 
-COPY resources/validate-pipelines.sh /usr/local/bin/validate-pipelines.sh
+COPY resources/validate-pipelines /usr/local/bin/validate-pipelines
+COPY resources/log-output /usr/local/bin/log-output

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <file_name>"
+    echo "Example: $0 pipeline_list.txt"
+    exit 1
+fi
+
+declare -a PIPELINE_NAME_ARRAY
+declare -a PIPELINE_ERROR_ARRAY
+
+validate-pipeline() {
+    log-output info "Validating pipeline: $1... "
+
+    local output;
+    output=$(fly validate-pipeline -s -c $1 2>&1)
+
+    if [[ $? -ne 0 ]]; then
+        VALIDATION_ERROR=1
+        PIPELINE_NAME_ARRAY+=("$1")
+        PIPELINE_ERROR_ARRAY+=("$output")
+    fi
+}
+
+## Main script start
+main() {
+    if [[ $# -ne 1 ]]; then
+        echo "Usage: $0 <file_name>"
+        echo ""
+        echo "Example: $0 /tmp/pipeline_list"
+        exit 1
+    fi
+
+    for PIPELINE in $(cat $1); do
+        validate-pipeline $PIPELINE
+    done
+
+    if [[ ! -z $VALIDATION_ERROR ]]; then
+        echo "----------------------------------------"
+        log-output error "The following pipelines failed validation:"
+        for (( j=0; j<${#PIPELINE_NAME_ARRAY[@]}; j++ )); do
+            log-output error "${PIPELINE_NAME_ARRAY[$j]}: ${PIPELINE_ERROR_ARRAY[$j]}"
+        done
+    
+        exit 1
+    else
+        exit 0
+    fi
+}
+main "$@"
