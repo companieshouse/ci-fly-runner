@@ -13,3 +13,5 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -L https://github.com/concourse/concourse/releases/download/v${CONCOURSE_VERSION}/fly-${CONCOURSE_VERSION}-linux-amd64.tgz \
     | tar -pzxv -C /usr/bin && \
     rm -f /tmp/fly.tgz
+
+COPY resources/validate-pipelines.sh /usr/local/bin/validate-pipelines.sh
