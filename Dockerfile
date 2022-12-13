@@ -4,8 +4,7 @@ ARG CONCOURSE_VERSION=6.7.1
 
 RUN yum update -y && \
     yum -y install \
-    curl \
-    git \
+    gzip \
     tar && \
     yum clean all
 
