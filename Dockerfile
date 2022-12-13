@@ -1,13 +1,12 @@
-FROM alpine:3.16
+FROM amazonlinux:2
 
 ARG CONCOURSE_VERSION=6.7.1
 
-RUN apk update && \
-    apk upgrade --no-cache && \
-    apk add --no-cache \
-    bash=5.1.16-r2 \
-    curl=7.83.1-r3 \
-    git=2.36.2-r0
+RUN yum update -y && \
+    yum -y install \
+    gzip \
+    tar && \
+    yum clean all
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -L https://github.com/concourse/concourse/releases/download/v${CONCOURSE_VERSION}/fly-${CONCOURSE_VERSION}-linux-amd64.tgz \
