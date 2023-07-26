@@ -16,7 +16,7 @@ RUN curl -L https://github.com/concourse/concourse/releases/download/v${CONCOURS
 WORKDIR /app
 
 # Copy the Python script to the working directory
-COPY resources/hello_world.py /app/
+COPY resources/pipeline_automation.py /app/
 
 # Run the Python script when the container starts
-CMD ["python3.8", "hello_world.py"]
+CMD ["python3.8", "pipeline_automation.py"]
