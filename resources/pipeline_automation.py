@@ -1,6 +1,7 @@
 ''' Python script that detected commit changes and creates pipeline changes '''
 import logging
 import os
+import sys
 import subprocess
 import shlex
 import yaml
@@ -182,10 +183,10 @@ if __name__ == '__main__':
     # Welcome message
     logging.info("Pipeline Automation Container V0.1")
 
-    env_name = "PIPELINE_GIT_REPOSITORY"
-    pipeline_folder = os.getenv(env_name)
+    ENV_NAME = "PIPELINE_GIT_REPOSITORY"
+    pipeline_folder = os.getenv(ENV_NAME)
     if pipeline_folder is None:
-        raise f"'{env_name}' is not set in the environment but is required."
+        raise AssertionError(f"'{ENV_NAME}' is not set in the environment but is required.")
 
     # Open the repository
     pipeline_repo = PipelineRepository(os.path.abspath(pipeline_folder))
@@ -196,7 +197,7 @@ if __name__ == '__main__':
     # Exit if no changes
     if not changes:
         logging.info("No pipeline changes found")
-        exit()
+        sys.exit()
 
     # Apply changes
     session = Fly('concourse')
