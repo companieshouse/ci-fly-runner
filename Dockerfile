@@ -14,8 +14,6 @@ RUN curl -L https://github.com/concourse/concourse/releases/download/v${CONCOURS
 
 RUN python3.8 -m pip install pyyaml gitpython
 
-ENV PIPELINE_GIT_REPOSITORY="/source-code"
-
 # Set the working directory inside the container
 WORKDIR /app
 
