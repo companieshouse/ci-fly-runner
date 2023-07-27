@@ -97,7 +97,7 @@ class PipelineRepository():
         try:
             current_commit = self.repo.head.commit
         except ValueError as ex:
-            logging.critical("Failed to get git commits")
+            logging.critical("Failed to get any git commits")
             raise ex
 
         logging.info("Current commit: %s", current_commit)
@@ -182,8 +182,13 @@ if __name__ == '__main__':
     # Welcome message
     logging.info("Pipeline Automation Container V0.1")
 
+    env_name = "PIPELINE_GIT_REPOSITORY"
+    pipeline_folder = os.getenv(env_name)
+    if pipeline_folder is None:
+        raise f"'{env_name}' is not set in the environment but is required."
+
     # Open the repository
-    pipeline_repo = PipelineRepository(os.path.abspath('../..'))
+    pipeline_repo = PipelineRepository(os.path.abspath(pipeline_folder))
 
     # Get pipeline change: adding,updating,removing
     changes = pipeline_repo.get_pipeline_changes()
