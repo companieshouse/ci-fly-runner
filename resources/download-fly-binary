@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+required_env_vars=(
+    CONCOURSE_ENDPOINT
+)
+
+check_environment() {
+    for env_var in "${required_env_vars[@]}"; do
+        if [[ -z "$(printenv ${env_var})" ]]; then
+            log-output error "Environment variable not set: ${env_var}" >&2
+            missing_env_vars="true"
+        fi
+    done
+
+    if [[ "${missing_env_vars}" == "true" ]]; then
+        exit 1
+    fi
+}
+
+set_script_vars() {
+    concourse_endpoint="${CONCOURSE_ENDPOINT}"
+    concourse_state_cookie_jar="skymarshal_state"
+    concourse_auth_cookie_jar="skymarshal_auth"
+    fly_bin_dir="/usr/local/bin"
+}
+
+download_fly_binary () {
+    log-output info "Downloading fly binary from Concourse: ${concourse_endpoint}"
+
+    if [[ ! -d "${fly_bin_dir}" ]]; then
+        if ! mkdir -p "${fly_bin_dir}" 2>/dev/null; then
+            log-output error "Unable to create directory: '${fly_bin_dir}'"
+            exit 1
+        fi
+    fi
+
+    local fly_endpoint="${concourse_endpoint}/api/v1/cli?arch=amd64&platform=linux"
+
+    local response_code; response_code=$(curl \
+        --silent \
+        --location \
+        "${fly_endpoint}" \
+        --write-out "%{response_code}" \
+        --output "${fly_bin_dir}/fly")
+
+    local exit_code=$?
+
+    if (( exit_code != 0 )) || [[ "${response_code}" != "200" ]]; then
+        rm -f "${fly_bin_dir}/fly" 2>/dev/null
+        log-output error "Unable to download fly binary from URL: '${fly_endpoint}'"
+        exit 1
+    fi
+    log-output info "Successfully downloaded fly binary: ${fly_bin_dir}/fly"
+
+    if ! chmod 755 "${fly_bin_dir}/fly" 2>/dev/null; then
+        log-output error "Unable to change mode of file: '${fly_bin_dir}/fly"
+        exit 1
+    fi
+
+    log-output info "fly binary is now available at: ${fly_bin_dir}/fly"
+}
+
+## Entrypoint
+check_environment
+set_script_vars
+download_fly_binary
