@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+required_env_vars=(
+    CONCOURSE_ENDPOINT
+    CONCOURSE_USERNAME
+    CONCOURSE_PASSWORD
+    CONCOURSE_ENVIRONMENT
+    CONCOURSE_TEAM
+)
+
+check_environment() {
+    for env_var in "${required_env_vars[@]}"; do
+        if [[ -z "$(printenv ${env_var})" ]]; then
+            log-output error "Environment variable not set: ${env_var}"
+            missing_env_vars="true"
+        fi
+    done
+
+    if [[ "${missing_env_vars}" == "true" ]]; then
+        exit 1
+    fi
+}
+
+set_script_vars() {
+    concourse_endpoint="${CONCOURSE_ENDPOINT}"
+    concourse_username="${CONCOURSE_USERNAME}"
+    concourse_password="${CONCOURSE_PASSWORD}"
+    concourse_environment="${CONCOURSE_ENVIRONMENT}"
+    concourse_team="${CONCOURSE_TEAM}"
+    concourse_state_cookie_jar="skymarshal_state"
+    concourse_auth_cookie_jar="skymarshal_auth"
+    fly_target="${concourse_environment}-${concourse_team}"
+}
+
+login_to_concourse() {
+    concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_endpoint}/sky/login" 2>/dev/null)
+    if (( $? != 0 )); then
+        log-output error "Unable to retrieve login page for Concourse endpoint: ${concourse_endpoint}" >&2
+        exit 1
+    fi
+
+    form_action_pattern='action="([^"]+)'
+    if [[ ${concourse_login_page_html} =~ ${form_action_pattern} ]]; then
+        if [[ -n "${BASH_REMATCH[1]}" ]]; then
+            login_path_with_params="${BASH_REMATCH[1]//$amp;/&}"
+        else
+            log-output error "Unable to extract action from login page response"
+            exit 1
+        fi
+    else
+        log-output error "No 'action' attribute found in login page response"
+        exit 1
+    fi
+
+    log-output info "Attempting to autenticate with Concourse"
+    concourse_login_response_html=$(curl \
+      --location \
+      --silent \
+      --cookie "${concourse_state_cookie_jar}" \
+      --cookie-jar "${concourse_auth_cookie_jar}" \
+      --data-urlencode "login=${concourse_username}" \
+      --data-urlencode "password=${concourse_password}" \
+      "${concourse_endpoint}${login_path_with_params}")
+
+    if (( $? != 0 )); then
+        log-output error "Unable to retrieve auth cookie"
+        exit 1
+    elif [[ "${concourse_login_response_html}" =~ 'invalid username and password' ]]; then
+        log-output error "Invalid username or password supplied"
+        exit 1
+    fi
+
+    log-output info "Extracting bearer token from cookie jar file: ${concourse_auth_cookie_jar}"
+    bearer_token_pattern='bearer +([^"]+)'
+    if [[ $(cat "${concourse_auth_cookie_jar}") =~ ${bearer_token_pattern} ]]; then
+        if [[ -n "${BASH_REMATCH[1]}" ]]; then
+            log-output info "Successfully extracted bearer token"
+            bearer_token="${BASH_REMATCH[1]}"
+            rm -f "${concourse_state_cookie_jar}" "${concourse_auth_cookie_jar}" >/dev/null 2>&1
+        else
+            log-output error "Unable to extract bearer token"
+            exit 1
+        fi
+    else
+        log-output error "No bearer token found"
+        exit 1
+    fi
+}
+
+set_fly_configuration() {
+    log-output info "Updating fly configuration"
+    if ! touch ~/.flyrc; then
+        log-output error "Unable to create ~/.flyrc configuration file"
+        exit 1
+    fi
+
+    yq -i ".targets += {\"${fly_target}\": { \"api\": \"${concourse_endpoint}\", \"team\": \"${concourse_team}\", \"token\": {\"type\": \"bearer\", \"value\": \"${bearer_token}\"}}}" ~/.flyrc
+    if (( $? == 0 )); then
+        log-output info "Successfully updated ~/.flyrc configuration file"
+    else
+        log-output error "Unable to update ~/.flyrc configuration file"
+        exit 1
+    fi
+}
+
+## Entrypoint
+check_environment
+set_script_vars
+login_to_concourse
+set_fly_configuration
