@@ -52,7 +52,7 @@ login_to_concourse() {
         exit 1
     fi
 
-    log-output info "Attempting to autenticate with Concourse"
+    log-output info "Attempting to authenticate with Concourse"
     concourse_login_response_html=$(curl \
       --location \
       --silent \

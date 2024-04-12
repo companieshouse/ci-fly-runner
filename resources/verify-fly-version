@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+required_env_vars=(
+    CONCOURSE_ENDPOINT
+)
+
+check_environment() {
+    for env_var in "${required_env_vars[@]}"; do
+        if [[ -z "$(printenv ${env_var})" ]]; then
+            log-output error "Environment variable not set: ${env_var}" >&2
+            missing_env_vars="true"
+        fi
+    done
+
+    if [[ "${missing_env_vars}" == "true" ]]; then
+        exit 1
+    fi
+}
+
+set_script_vars() {
+    concourse_endpoint="${CONCOURSE_ENDPOINT}"
+    concourse_version_api_path="api/v1/info"
+    concourse_version_regex='"version":"([0-9]*.[0-9]*.[0-9]*)"'
+    fly_bin_dir="/usr/local/bin"
+}
+
+verify_fly_version() {
+    concourse_info=$(curl -s "${CONCOURSE_ENDPOINT}/${concourse_version_api_path}")
+    if [[ "${concourse_info}" =~ $concourse_version_regex ]]; then
+        concourse_version="${BASH_REMATCH[1]}"
+        log-output info "Detected Concourse version: ${concourse_version}"
+    else
+        log-output error "Unable to determine Concourse version"
+        exit 1
+    fi
+
+    if [[ -f "${fly_bin_dir}/fly-${concourse_version}" ]]; then
+        log-output info "Cached fly binary found for Concourse version: ${concourse_version}"
+        return=$(ln -sf "${fly_bin_dir}/fly-${concourse_version}" "${fly_bin_dir}/fly"; echo $?)
+        if [[ $return -eq 0 ]]; then
+            log-output info "fly binary is now available at: ${fly_bin_dir}/fly"
+            exit 0
+        else
+            log-output error "Failed to make fly binary available: [ln error: ${return}]"
+            exit 1
+        fi
+    else
+        log-output info "No cached binary found for Concourse version: ${concourse_version}"
+        download-fly-binary
+    fi
+}
+
+## Entrypoint
+check_environment
+set_script_vars
+verify_fly_version

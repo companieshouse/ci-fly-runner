@@ -50,7 +50,6 @@ download_fly_binary () {
         log-output error "Unable to download fly binary from URL: '${fly_endpoint}'"
         exit 1
     fi
-    log-output info "Successfully downloaded fly binary: ${fly_bin_dir}/fly"
 
     if ! chmod 755 "${fly_bin_dir}/fly" 2>/dev/null; then
         log-output error "Unable to change mode of file: '${fly_bin_dir}/fly"
