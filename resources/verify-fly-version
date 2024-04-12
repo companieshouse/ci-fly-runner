@@ -36,7 +36,7 @@ verify_fly_version() {
 
     if [[ -f "${fly_bin_dir}/fly-${concourse_version}" ]]; then
         log-output info "Cached fly binary found for Concourse version: ${concourse_version}"
-        return=$(ln -sf "${fly_bin_dir}/fly-${concourse_version}" "${fly_bin_dir}/fly"; echo $?)
+        return=$(cp -f "${fly_bin_dir}/fly-${concourse_version}" "${fly_bin_dir}/fly"; echo $?)
         if [[ $return -eq 0 ]]; then
             log-output info "fly binary is now available at: ${fly_bin_dir}/fly"
             exit 0
