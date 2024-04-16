@@ -10,7 +10,7 @@ required_env_vars=(
 
 check_environment() {
     if [[ $- =~ x ]]; then
-        log-output error "Execution of this script requires that the xtrace shell option is not be set"
+        log-output error "Execution of this script requires that the xtrace shell option is not set"
         exit 1
     fi
 
