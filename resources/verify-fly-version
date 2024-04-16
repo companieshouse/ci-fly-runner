@@ -7,7 +7,7 @@ required_env_vars=(
 check_environment() {
     for env_var in "${required_env_vars[@]}"; do
         if [[ -z "$(printenv ${env_var})" ]]; then
-            log-output error "Environment variable not set: ${env_var}" >&2
+            log-output error "Environment variable not set: ${env_var}"
             missing_env_vars="true"
         fi
     done
