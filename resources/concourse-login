@@ -9,6 +9,8 @@ required_env_vars=(
 )
 
 check_environment() {
+    [[ $- =~ x ]] && set +x && xtrace_disabled="true"
+
     for env_var in "${required_env_vars[@]}"; do
         if [[ -z "$(printenv ${env_var})" ]]; then
             log-output error "Environment variable not set: ${env_var}"
@@ -19,6 +21,8 @@ check_environment() {
     if [[ "${missing_env_vars}" == "true" ]]; then
         exit 1
     fi
+
+    [[ "${xtrace_disabled}" == "true" ]] && set -x
 }
 
 set_script_vars() {
@@ -33,13 +37,13 @@ set_script_vars() {
 }
 
 login_to_concourse() {
-    concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_endpoint}/sky/login" 2>/dev/null)
+    local concourse_login_page_html; concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_endpoint}/sky/login" 2>/dev/null)
     if (( $? != 0 )); then
         log-output error "Unable to retrieve login page for Concourse endpoint: ${concourse_endpoint}"
         exit 1
     fi
 
-    form_action_pattern='action="([^"]+)'
+    local form_action_pattern; form_action_pattern='action="([^"]+)'
     if [[ ${concourse_login_page_html} =~ ${form_action_pattern} ]]; then
         if [[ -n "${BASH_REMATCH[1]}" ]]; then
             login_path_with_params="${BASH_REMATCH[1]//$amp;/&}"
@@ -53,7 +57,7 @@ login_to_concourse() {
     fi
 
     log-output info "Attempting to authenticate with Concourse"
-    concourse_login_response_html=$(curl \
+    local concourse_login_response_html; concourse_login_response_html=$(curl \
       --location \
       --silent \
       --cookie "${concourse_state_cookie_jar}" \
@@ -71,7 +75,7 @@ login_to_concourse() {
     fi
 
     log-output info "Extracting bearer token from cookie jar file: ${concourse_auth_cookie_jar}"
-    bearer_token_pattern='bearer +([^"]+)'
+    local bearer_token_pattern; bearer_token_pattern='bearer +([^"]+)'
     if [[ $(cat "${concourse_auth_cookie_jar}") =~ ${bearer_token_pattern} ]]; then
         if [[ -n "${BASH_REMATCH[1]}" ]]; then
             log-output info "Successfully extracted bearer token"
