@@ -35,7 +35,7 @@ set_script_vars() {
 login_to_concourse() {
     concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_endpoint}/sky/login" 2>/dev/null)
     if (( $? != 0 )); then
-        log-output error "Unable to retrieve login page for Concourse endpoint: ${concourse_endpoint}" >&2
+        log-output error "Unable to retrieve login page for Concourse endpoint: ${concourse_endpoint}"
         exit 1
     fi
 
