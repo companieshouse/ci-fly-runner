@@ -32,11 +32,8 @@ RUN curl -Ls "https://github.com/mikefarah/yq/releases/download/v${yq_version}/$
 
 COPY resources/ /usr/local/bin/
 
-COPY /rpms/ /rpms/
-RUN dnf -y install --disablerepo=* /rpms/*.rpm && \
+COPY /packages/ /packages/
+RUN dnf -y install --disablerepo=* /packages/*.rpm && \
     dnf clean all && \
-    rm -rf /rpms/
-
-COPY python-wheels/ /python-wheels/
-RUN python3 -m pip --no-cache-dir install /python-wheels/*.whl && \
-    rm -rf /python-wheels/
+    python3 -m pip --no-cache-dir install /packages/*.whl && \
+    rm -rf /packages/
