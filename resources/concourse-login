@@ -50,7 +50,7 @@ login_to_concourse() {
             if shopt -ps | grep -q patsub_replacement; then
                 shopt -u patsub_replacement
             fi
-            login_path_with_params="${BASH_REMATCH[1]//$amp;/&}"
+            login_path_with_params="${BASH_REMATCH[1]//&amp;/&}"
         else
             log-output error "Unable to extract action from login page response"
             exit 1
