@@ -47,7 +47,10 @@ login_to_concourse() {
     local form_action_pattern; form_action_pattern='action="([^"]+)'
     if [[ ${concourse_login_page_html} =~ ${form_action_pattern} ]]; then
         if [[ -n "${BASH_REMATCH[1]}" ]]; then
-            login_path_with_params="${BASH_REMATCH[1]//$amp;/&}"
+            if shopt -ps | grep -q patsub_replacement; then
+                shopt -u patsub_replacement
+            fi
+            login_path_with_params="${BASH_REMATCH[1]//&amp;/&}"
         else
             log-output error "Unable to extract action from login page response"
             exit 1
