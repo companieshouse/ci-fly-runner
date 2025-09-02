@@ -34,14 +34,69 @@ set_script_vars() {
     concourse_team="${CONCOURSE_TEAM}"
     concourse_state_cookie_jar="skymarshal_state"
     concourse_auth_cookie_jar="skymarshal_auth"
+    concourse_auth_method="${CONCOURSE_AUTH_METHOD:-ldap}"
+    concourse_default_login_url="${concourse_endpoint}/sky/login"
     fly_target="${concourse_environment}-${concourse_team}"
 }
 
 login_to_concourse() {
-    local concourse_login_page_html; concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_endpoint}/sky/login" 2>/dev/null)
+    local concourse_login_url;
+    if [[ -z $1 ]]; then
+        concourse_login_url="${concourse_default_login_url}"
+    else
+        concourse_login_url="${1}"
+    fi
+
+    local concourse_login_page_html; concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_login_url}" 2>/dev/null)
     if (( $? != 0 )); then
         log-output error "Unable to retrieve login page for Concourse endpoint: ${concourse_endpoint}"
         exit 1
+    fi
+
+    local login_choice_pattern; login_choice_pattern='href="\/sky\/issuer\/auth'
+    if [[ ${concourse_login_page_html} =~ ${login_choice_pattern} ]]; then
+        log-output info "Login choice detected, selecting ${concourse_auth_method}"
+        local auth_method_redirect_pattern
+        case "$concourse_auth_method" in
+            "ldap")
+                auth_method_redirect_pattern='href="(\/sky\/issuer\/auth\/ldap[^"]+)'
+                ;;
+            "local")
+                auth_method_redirect_pattern='href="(\/sky\/issuer\/auth\/local[^"]+)'
+                ;;
+            *)
+                log-output error "Invalid auth method selected: [${concourse_auth_method}]"
+                exit 1
+                ;;
+        esac
+
+        if [[ ${concourse_login_page_html} =~ ${auth_method_redirect_pattern} ]]; then
+            if [[ -n "${BASH_REMATCH[1]}" ]]; then
+                if shopt -ps | grep -q patsub_replacement; then
+                    shopt -u patsub_replacement
+                fi
+                redirect_url_with_params="${BASH_REMATCH[1]//&amp;/&}"
+                redirect_url_with_params="${redirect_url_with_params//&#43;/+}"
+
+                concourse_login_page_html=$(curl \
+                  --location \
+                  --silent \
+                  --cookie "${concourse_state_cookie_jar}" \
+                  --cookie-jar "${concourse_auth_cookie_jar}" \
+                  "${concourse_endpoint}${redirect_url_with_params}")
+
+                if (( $? != 0 )); then
+                    log-output error "Unable to retrieve login page for Concourse endpoint: ${concourse_endpoint}"
+                    exit 1
+                fi
+            else
+                log-output error "Unable to extract redirect URL from login page response"
+                exit 1
+            fi
+        else
+            log-output error "No links to valid auth mehtods found in login page response"
+            exit 1
+        fi
     fi
 
     local form_action_pattern; form_action_pattern='action="([^"]+)'
