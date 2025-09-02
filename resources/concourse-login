@@ -35,19 +35,11 @@ set_script_vars() {
     concourse_state_cookie_jar="skymarshal_state"
     concourse_auth_cookie_jar="skymarshal_auth"
     concourse_auth_method="${CONCOURSE_AUTH_METHOD:-ldap}"
-    concourse_default_login_url="${concourse_endpoint}/sky/login"
     fly_target="${concourse_environment}-${concourse_team}"
 }
 
 login_to_concourse() {
-    local concourse_login_url;
-    if [[ -z $1 ]]; then
-        concourse_login_url="${concourse_default_login_url}"
-    else
-        concourse_login_url="${1}"
-    fi
-
-    local concourse_login_page_html; concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_login_url}" 2>/dev/null)
+    local concourse_login_page_html; concourse_login_page_html=$(curl --location --cookie-jar "${concourse_state_cookie_jar}" "${concourse_endpoint}/sky/login" 2>/dev/null)
     if (( $? != 0 )); then
         log-output error "Unable to retrieve login page for Concourse endpoint: ${concourse_endpoint}"
         exit 1
