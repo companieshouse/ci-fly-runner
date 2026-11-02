@@ -1,4 +1,4 @@
-FROM 416670754337.dkr.ecr.eu-west-2.amazonaws.com/ci-core-runtime:1.2.0
+FROM 416670754337.dkr.ecr.eu-west-2.amazonaws.com/ci-core-runtime:1.3.1
 
 ARG fly_version=8.2.5
 ARG yq_version=4.53.3
@@ -42,3 +42,7 @@ RUN dnf -y install --disablerepo=* /packages/*.rpm && \
     dnf clean all && \
     python3.13 -m pip --no-cache-dir install /packages/*.whl && \
     rm -rf /packages/
+
+COPY requirements.txt /tmp/
+RUN python3.13 -m pip --no-cache-dir install -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
