@@ -1,6 +1,6 @@
 FROM 416670754337.dkr.ecr.eu-west-2.amazonaws.com/ci-core-runtime:1.3.1
 
-ARG fly_version=8.2.5
+ARG fly_version=8.3.2
 ARG yq_version=4.53.3
 ARG yq_binary="yq_linux_amd64"
 
